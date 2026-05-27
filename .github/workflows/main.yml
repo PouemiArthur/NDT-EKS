@@ -25,6 +25,7 @@ jobs:
 
   build-and-push:
     runs-on: self-hosted
+    needs: provision-infra
     steps:
       - name: checkout files
         uses: actions/checkout@v4
