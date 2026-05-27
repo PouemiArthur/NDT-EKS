@@ -9,7 +9,7 @@ backend "s3" {
   bucket = "pjr-terraform-state270526"
   key = "ndt/terraform.tfstate"
   region = "eu-north-1"
-  dynamodb_table = "pjr-terraform-lock"
+  dynamodb_table = "Pjr-terraform-lock"
   encrypt = true
   }
 }
