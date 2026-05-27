@@ -26,7 +26,7 @@ module "eks" {
   version = "~> 20.0"
   
   cluster_name = "ndt-cluster"
-  cluster_version = "1.29"
+  cluster_version = "1.33"
 
   cluster_endpoint_public_access = true
 
