@@ -1,7 +1,3 @@
-module "S3_DDB" {
-  source = "./modules/state-lock"
-  }
-
 module "ECR_repo" {
   source = "./modules/ecr"
   }
