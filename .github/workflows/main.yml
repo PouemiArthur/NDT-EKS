@@ -1,0 +1,96 @@
+name: deploy NDT to kubernetes cluster
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  provision-infra:
+    runs-on: self-hosted
+    steps:
+      - name: checkout files
+        uses: actions/checkout@v4
+
+      - name: configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: provision AWS and EKS infrastructure
+        run: |
+          terraform -chdir=./terraform init
+          terraform -chdir=./terraform apply -auto-approve
+
+  build-and-push:
+    runs-on: self-hosted
+    steps:
+      - name: checkout files
+        uses: actions/checkout@v4
+
+      - name: configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: build docker images
+        run: |
+          docker build -t backend:1.0.0 ./backend
+          docker build -t frontend:1.0.0 ./frontend
+          docker build -t nginx:1.0.0 ./nginx
+
+      - name: tag and push images to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ECR_REPO: ndt-image-repo
+        run: |
+          docker tag backend:1.0.0  $ECR_REGISTRY/$ECR_REPO:backend-1.0.0
+          docker tag frontend:1.0.0 $ECR_REGISTRY/$ECR_REPO:frontend-1.0.0
+          docker tag nginx:1.0.0    $ECR_REGISTRY/$ECR_REPO:nginx-1.0.0
+
+          docker push $ECR_REGISTRY/$ECR_REPO:backend-1.0.0
+          docker push $ECR_REGISTRY/$ECR_REPO:frontend-1.0.0
+          docker push $ECR_REGISTRY/$ECR_REPO:nginx-1.0.0
+
+  start-deployment:
+    runs-on: self-hosted
+    needs: build-and-push
+    steps:
+      - name: checkout files
+        uses: actions/checkout@v4
+
+      - name: configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: configure kubectl for EKS
+        run: aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
+
+      - name: deploy to EKS cluster
+        env:
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPO: ndt-image-repo
+        run: |
+          export ECR_BACKEND_IMAGE=$ECR_REGISTRY/$ECR_REPO:backend-1.0.0
+          export ECR_FRONTEND_IMAGE=$ECR_REGISTRY/$ECR_REPO:frontend-1.0.0
+          export ECR_NGINX_IMAGE=$ECR_REGISTRY/$ECR_REPO:nginx-1.0.0
+
+          kubectl apply -f ./postgres-deployment.yaml
+          kubectl apply -f ./redis-deployment.yaml
+          envsubst < ./backend-deployment.yaml  | kubectl apply -f -
+          envsubst < ./frontend-deployment.yaml | kubectl apply -f -
+          envsubst < ./nginx-deployment.yaml    | kubectl apply -f -
+          kubectl apply -f ./ingress.yaml
+
+      - name: deployment status message
+        run: echo "deployment to EKS cluster completed"
