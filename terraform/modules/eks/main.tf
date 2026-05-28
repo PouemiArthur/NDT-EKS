@@ -49,7 +49,7 @@ module "eks" {
         }
        }
       }
-      instance_types = ["t3.medium", "t3.small", "t3a.medium", "t2.medium"] 
+      instance_types = ["t3.medium", "t3.small", "t2.medium"] 
      }
    }
   enable_cluster_creator_admin_permissions = true
