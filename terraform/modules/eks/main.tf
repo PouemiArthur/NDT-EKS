@@ -26,7 +26,7 @@ module "eks" {
   version = "~> 20.0"
   
   cluster_name = "ndt-cluster"
-  cluster_version = "1.30"
+  cluster_version = "1.33"
 
   cluster_endpoint_public_access = true
 
@@ -43,13 +43,13 @@ module "eks" {
         xvda = {
           device_name = "/dev/xvda"
           ebs = {
-            volume_size = 16
+            volume_size = 24
             volume_type = "gp3"
-            delete_on_termination = false
-      instance_types = ["t3.medium", "t3.small", "t3a.medium", "t2.medium"]
+            delete_on_termination = false]
         }
        }
       }
+      instance_types = ["t3.medium", "t3.small", "t3a.medium", "t2.medium"] 
      }
    }
   enable_cluster_creator_admin_permissions = true
