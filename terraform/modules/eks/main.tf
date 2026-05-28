@@ -27,11 +27,6 @@ module "eks" {
   
   cluster_name = "ndt-cluster"
   cluster_version = "1.33"
-  cluster_addons = {
-    aws-ebs-csi-driver = {
-      most_recent = true
-    }
-  }
 
   cluster_endpoint_public_access = true
 
