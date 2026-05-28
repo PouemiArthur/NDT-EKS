@@ -45,7 +45,7 @@ module "eks" {
           ebs = {
             volume_size = 24
             volume_type = "gp3"
-            delete_on_termination = false]
+            delete_on_termination = false
         }
        }
       }
