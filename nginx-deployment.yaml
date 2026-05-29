@@ -1,6 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
-imetadata:
+metadata:
   name: nginx
 spec:
   replicas: 2
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: ${ECR_NGINX_IMAGE}
+        image: 009806198748.dkr.ecr.eu-north-1.amazonaws.com/ndt-image-repo:nginx-1.0.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
@@ -38,7 +38,7 @@ kind: Service
 metadata:
   name: nginx
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: nginx
   ports:

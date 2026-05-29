@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: ${ECR_BACKEND_IMAGE}
+        image: 009806198748.dkr.ecr.eu-north-1.amazonaws.com/ndt-image-repo:backend-1.0.0
         resources:
           requests:
             cpu: "100m"

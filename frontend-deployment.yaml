@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ${ECR_FRONTEND_IMAGE}
+        image: 009806198748.dkr.ecr.eu-north-1.amazonaws.com/ndt-image-repo:frontend-1.0.0
         imagePullPolicy: IfNotPresent
         env:
           - name: BACKEND_URL
